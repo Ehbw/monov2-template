@@ -1,0 +1,7 @@
+*.sln
+*.csproj
+.vs/
+dist/
+obj/
+bin/
+dependencies/
