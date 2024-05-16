@@ -21,10 +21,25 @@ premake.override(premake.vstudio.cs2005.elements, "projectProperties", function 
 end)
 ]]
 
+premake.override(premake.vstudio.dotnetbase, "targetFrameworkVersion", function (base, cfg)
+    base(cfg)
+end)
+
 ---Sets assemblyname to match CFX's mono scrt expectation of .net.dll filenames  
 premake.override(premake.vstudio.dotnetbase, "assemblyName", function (_, cfg)
     _p(2, ("<AssemblyName>%s.net</AssemblyName>"):format(cfg.buildtarget.basename))
 end)
+
+local prevPercent = 0
+local function progress(total, current)
+    local ratio = current / total;
+    ratio = math.min(math.max(ratio, 0), 1);
+    local percent = math.floor(ratio * 100);
+    if prevPercent ~= percent then
+        prevPercent = percent
+        print("Download progress (" .. percent .. "%/100%)")
+    end
+end
 
 ---Finds and copies Mono V2 dlls for the game provided and stores them in dependencies
 ---@param game 'Server' | 'LibertyM' | 'RedM' | 'FiveM'
@@ -35,8 +50,23 @@ function FetchGameDependencies(game)
     end
 
     if game == 'Server' then
-      --TODO: get latest server artifact, download zip, extract, retrieve monov2 dll's 
-      return
+        local body, _, code = http.get("https://changelogs-live.fivem.net/api/changelog/versions/win32/server")
+        if code == 200 then
+            local data = json.decode(body)
+            local _, response = http.download(data.latest_download, "dependencies/server.zip", {
+                progress = progress
+            })
+
+            if response == 200.0 then
+                zip.extract("dependencies/server.zip", "dependencies/artifact")
+                os.remove("dependencies/server.zip")
+                local monoV2Dir = ("%s/artifact/citizen/clr2/lib/mono/4.5/v2/"):format(depDir)
+                print(monoV2Dir)
+                os.copyfile(("%sCitizenFX.Core.dll"):format(monoV2Dir), ("%s/CitizenFX.Core.dll"):format(depDir))
+                os.copyfile(("%sCitizenFX.Server.dll"):format(monoV2Dir), ("%s/CitizenFX.Server.dll"):format(depDir))
+            end
+        end
+        return
     end
 
     local monoV2Dir = ("%s/%s/%s.app/citizen/clr2/lib/mono/4.5/v2/"):format(os.getenv("localappdata"), game, game)

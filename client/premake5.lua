@@ -3,9 +3,16 @@ project "Client"
     language "C#"
     csversion "latest"
 
-    dotnetframework "4.5.2"
+    dotnetframework "4.8"
 
     GetGameDependencies("FiveM")
+
+    nugetsource "https://api.nuget.org/v3/index.json"
+    nuget {"System.Text.Json:8.0.3"}
+
+    defines {
+      "IS_CLIENT"
+    }
 
     files {
       "src/**.cs",
@@ -16,6 +23,7 @@ project "Client"
       "System.dll",
       "Microsoft.CSharp.dll",
       "System.Core.dll",
+      "System.Text.Json.dll"
     }
 
     filter "configurations:Debug"

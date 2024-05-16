@@ -3,13 +3,20 @@ project "Server"
     language "C#"
     csversion "latest"
 
-    dotnetframework "4.5.2"
+    dotnetframework "4.8"
 
     GetGameDependencies("Server")
+
+    nugetsource "https://api.nuget.org/v3/index.json"
+    nuget {"System.Text.Json:8.0.3"}
 
     files {
       "src/**.cs",
       "../shared/**.cs"
+    }
+
+    defines {
+      "IS_SERVER"
     }
 
     links {
